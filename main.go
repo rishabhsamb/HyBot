@@ -14,7 +14,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"math/rand"
+
+	"strconv"
+
+	"time"
 )
+
+var hyoonCount = 0
+var startTime string
 
 func main() {
 	fmt.Println("Hello")
@@ -30,8 +37,9 @@ func main() {
 	if err != nil {
 		log.Panic("Could not connect to Discord", err)
 		return
+	} else {
+		startTime = time.Now().Format("02-Jan-2006 15:04:05")
 	}
-
 	defer b.Close()
 
 	log.Print("Discord bot is now running. Press CTRL-C to exit.")
@@ -52,6 +60,13 @@ func HyoonHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.Content == "hyoon" {
 		s.ChannelMessageSend(m.ChannelID, "https://pbs.twimg.com/media/Etp8tu7VgAAv4KG.jpg")
+		var message = "Hyoon has been said " + strconv.Itoa(hyoonCount) + " time"
+		if hyoonCount > 1 || hyoonCount == 0 {
+			message = message + "s"
+		}
+		message = message + " since " + startTime
+		s.ChannelMessageSend(m.ChannelID, message)
+		hyoonCount = hyoonCount + 1
 		return
 	}
 
