@@ -27,12 +27,10 @@ func main() {
 		log.Panic("Could not connect to Discord", err)
 		return
 	}
+	defer b.Close()
 
 	log.Print("Discord bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
-
-	b.Close()
-
 }
