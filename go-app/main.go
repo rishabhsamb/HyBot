@@ -12,7 +12,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var ob = OutburstHandlerStruct{loadOutbursts("outbursts.txt")}
+var ob = OutburstHandlerStruct{loadOutbursts("outbursts.txt"), "outbursts.txt"}
 
 func main() {
 	token := "ODc2NDgyMzUzMTM5MTY3MjMy.YRktzQ.DWvYcEteGk6MdXKMvlnEUHsLTM8"
@@ -20,7 +20,7 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	b.AddHandler(ob.OutburstHandler)
+	b.AddHandler(commandHandler)
 
 	err = b.Open()
 	if err != nil {
@@ -28,6 +28,7 @@ func main() {
 		return
 	}
 	defer b.Close()
+	defer ob.saveOutbursts()
 
 	log.Print("Discord bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
