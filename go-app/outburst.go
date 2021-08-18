@@ -11,13 +11,28 @@ import (
 
 	"strconv"
 
+	"math/rand"
+
 	"github.com/bwmarrin/discordgo"
+
+	"time"
 )
 
 type outburst interface {
 	fire(s *discordgo.Session, cid string)
 	getKey() string
 	saveStringSlice() []string
+}
+
+type routburst interface {
+	outburst
+	getImageId() int
+}
+
+func (ro *randomOutburst) getImageId() int {
+	s2 := rand.NewSource(time.Now().UnixNano())
+	r2 := rand.New(s2)
+	return r2.Intn(len(ro.images))
 }
 
 type OutburstHandlerStruct struct {
@@ -56,9 +71,17 @@ type vanillaOutburst struct {
 	count    uint64
 	messages []string
 }
+type randomOutburst struct {
+	base     vanillaOutburst
+	picCount int
+	images   []string
+}
 
 func (v *vanillaOutburst) getKey() string {
 	return v.key
+}
+func (r *randomOutburst) getKey() string {
+	return r.base.key
 }
 
 func (v *vanillaOutburst) fire(s *discordgo.Session, cid string) {
@@ -69,8 +92,21 @@ func (v *vanillaOutburst) fire(s *discordgo.Session, cid string) {
 	s.ChannelMessageSend(cid, v.key+" has been called "+strconv.FormatUint(v.count, 10)+" times")
 }
 
+func (r *randomOutburst) fire(s *discordgo.Session, cid string) {
+	for _, str := range r.base.messages {
+		s.ChannelMessageSend(cid, str)
+	}
+	s.ChannelMessageSend(cid, r.images[r.getImageId()])
+	r.base.count++
+	s.ChannelMessageSend(cid, r.base.key+" has been called "+strconv.FormatUint(r.base.count, 10)+" times")
+}
+
 func (v *vanillaOutburst) saveStringSlice() []string {
 	return append([]string{"vo", v.key, strconv.FormatUint(v.count, 10)}, v.messages...)
+}
+
+func (r *randomOutburst) saveStringSlice() []string { //fix
+	return append([]string{"ro", r.base.key, strconv.FormatUint(r.base.count, 10)}, r.base.messages...)
 }
 
 func loadOutbursts(filepath string) []outburst {
@@ -92,12 +128,17 @@ func loadOutbursts(filepath string) []outburst {
 				log.Fatal(err)
 			}
 			retSlice = append(retSlice, &vanillaOutburst{lineSlice[1], count, lineSlice[3:]})
+		case lineSlice[0] == "ro":
+			pics := strings.Split(lineSlice[len(lineSlice)-1], " && ")
+			count, err := strconv.ParseUint(lineSlice[2], 10, 64)
+			if err != nil {
+				log.Fatal(err)
+			}
+			retSlice = append(retSlice, &randomOutburst{vanillaOutburst{lineSlice[1], count, lineSlice[3 : len(lineSlice)-1]}, len(pics), pics}) //2nd last element
 		}
 	}
-
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-
 	return retSlice
 }
