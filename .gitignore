@@ -1,2 +1,4 @@
 .env
 outbursts.txt
+cloudbuild.yaml
+app.yaml
