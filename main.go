@@ -3,11 +3,13 @@ package main
 import (
 	"log"
 
-	"os"
-
 	"os/signal"
 
+	"os"
+
 	"syscall"
+
+	"github.com/joho/godotenv"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,7 +17,11 @@ import (
 var ob = OutburstHandlerStruct{loadOutbursts("outbursts.txt"), "outbursts.txt"}
 
 func main() {
-	token := "ODc2NDgyMzUzMTM5MTY3MjMy.YRktzQ.DWvYcEteGk6MdXKMvlnEUHsLTM8"
+	err := godotenv.Load()
+	if err != nil {
+		panic(err.Error())
+	}
+	token := os.Getenv("TOKEN")
 	b, err := discordgo.New("Bot " + token)
 	if err != nil {
 		panic(err.Error())
