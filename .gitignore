@@ -3,3 +3,4 @@ outbursts.txt
 cloudbuild.yaml
 app.yaml
 app
+service-account-credentials.json

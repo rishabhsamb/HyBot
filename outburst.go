@@ -29,6 +29,17 @@ type routburst interface {
 	getImageId() int
 }
 
+type vanillaOutburst struct {
+	key      string
+	count    uint64
+	messages []string
+}
+type randomOutburst struct {
+	base     vanillaOutburst
+	picCount int
+	images   []string
+}
+
 func (ro *randomOutburst) getImageId() int {
 	s2 := rand.NewSource(time.Now().UnixNano())
 	r2 := rand.New(s2)
@@ -64,17 +75,6 @@ func (ob *OutburstHandlerStruct) saveOutbursts() {
 			log.Fatal(err)
 		}
 	}
-}
-
-type vanillaOutburst struct {
-	key      string
-	count    uint64
-	messages []string
-}
-type randomOutburst struct {
-	base     vanillaOutburst
-	picCount int
-	images   []string
 }
 
 func (v *vanillaOutburst) getKey() string {

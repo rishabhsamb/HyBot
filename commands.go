@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+
 	"strconv"
+
 	"strings"
 
 	"github.com/bwmarrin/discordgo"

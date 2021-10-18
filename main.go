@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"os/signal"
@@ -17,10 +18,15 @@ import (
 var ob = OutburstHandlerStruct{loadOutbursts("outbursts.txt"), "outbursts.txt"}
 
 func main() {
+
 	err := godotenv.Load()
 	if err != nil {
 		panic(err.Error())
 	}
+
+	ctx := context.Background()
+	firestoreClient := createClient(ctx)
+
 	token := os.Getenv("TOKEN")
 	b, err := discordgo.New("Bot " + token)
 	if err != nil {
@@ -33,6 +39,7 @@ func main() {
 		log.Panic("Could not connect to Discord", err)
 		return
 	}
+
 	defer b.Close()
 	defer ob.saveOutbursts()
 
