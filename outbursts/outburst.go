@@ -10,34 +10,30 @@ import (
 )
 
 type outburst struct {
-	key            string   `firestore:"key"`
-	callCount      uint64   `firestore:"callCount"`
-	messages       []string `firestore:"messages"`
-	randomMessages []string `firestore:"randomMessages"`
-}
-
-func (v *outburst) getKey() string {
-	return v.key
+	Key            string   `firestore:"key"`
+	CallCount      int64    `firestore:"callCount"`
+	Messages       []string `firestore:"messages"`
+	RandomMessages []string `firestore:"randomMessages"`
 }
 
 func (v *outburst) getRandomMessageIndex() int {
 	randomSeed := rand.NewSource(time.Now().UnixNano())
 	randomEngine := rand.New(randomSeed)
-	return randomEngine.Intn(len(v.randomMessages))
+	return randomEngine.Intn(len(v.RandomMessages))
 }
 
 func (v *outburst) sendMessages(s *discordgo.Session, cid string) {
-	for _, str := range v.messages {
+	for _, str := range v.Messages {
 		s.ChannelMessageSend(cid, str)
 	}
-	if len(v.randomMessages) > 0 {
-		s.ChannelMessageSend(cid, v.randomMessages[v.getRandomMessageIndex()])
+	if len(v.RandomMessages) > 0 {
+		s.ChannelMessageSend(cid, v.RandomMessages[v.getRandomMessageIndex()])
 	}
 }
 
 func (v *outburst) updateCount(s *discordgo.Session, cid string) {
-	v.callCount++
-	s.ChannelMessageSend(cid, v.key+" has been called "+strconv.FormatUint(v.callCount, 10)+" times.")
+	v.CallCount++
+	s.ChannelMessageSend(cid, v.Key+" has been called "+strconv.FormatInt(v.CallCount, 10)+" times.")
 }
 
 func (v *outburst) fire(s *discordgo.Session, cid string) {

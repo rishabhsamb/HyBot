@@ -1,20 +1,15 @@
 package main
 
 import (
+	"context"
 	"log"
-
-	"os/signal"
-
 	"os"
-
+	"os/signal"
 	"syscall"
 
-	"github.com/joho/godotenv"
-
 	"github.com/bwmarrin/discordgo"
+	"github.com/joho/godotenv"
 )
-
-var ob = OutburstHandlerStruct{loadOutbursts("outbursts.txt"), "outbursts.txt"}
 
 func main() {
 
@@ -23,15 +18,20 @@ func main() {
 		panic(err.Error())
 	}
 
-	// ctx := context.Background()
-	// firestoreClient := createClient(ctx)
+	ctx := context.Background()
+	firestoreClient := createClient(ctx)
+	var (
+		commander commandHandler
+	)
 
-	token := os.Getenv("TOKEN")
+	commander.init(ctx, firestoreClient)
+
+	token := os.Getenv("DISCORD_TOKEN")
 	b, err := discordgo.New("Bot " + token)
 	if err != nil {
 		panic(err.Error())
 	}
-	b.AddHandler(commandHandler)
+	b.AddHandler(commander.driver)
 
 	err = b.Open()
 	if err != nil {
@@ -40,7 +40,6 @@ func main() {
 	}
 
 	defer b.Close()
-	defer ob.saveOutbursts()
 
 	log.Print("Discord bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)

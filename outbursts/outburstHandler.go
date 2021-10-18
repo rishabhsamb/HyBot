@@ -2,6 +2,7 @@ package outbursts
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"cloud.google.com/go/firestore"
@@ -22,7 +23,9 @@ func (oh *OutburstHandler) Init(client *firestore.Client, ctx context.Context) {
 
 func (oh *OutburstHandler) Execute(s *discordgo.Session, cid string, key string) {
 	for _, burst := range oh.outbursts {
-		if key == burst.getKey() {
+		fmt.Println(key)
+		fmt.Println(burst.Key)
+		if key == burst.Key {
 			burst.fire(s, cid)
 		}
 	}
@@ -39,12 +42,12 @@ func (oh *OutburstHandler) LoadOutbursts() {
 			break
 		}
 		if err != nil {
-			log.Println("Error when looping through Outburst documents. OutburstHandler slice empty.")
+			log.Printf("Error when looping through Outburst documents: %s", err)
 			return
 		}
 		var outburstToAdd outburst
 		if err := doc.DataTo(&outburstToAdd); err != nil {
-			log.Println("Error when converting outburst document to outburst struct. Several outbursts may not be loaded in.")
+			log.Printf("Error when converting outburst document to outburst struct %s", err)
 			return
 		}
 		oh.outbursts = append(oh.outbursts, outburstToAdd)
@@ -52,17 +55,16 @@ func (oh *OutburstHandler) LoadOutbursts() {
 }
 
 func (oh *OutburstHandler) AddOutburst(newKey string, newMessages []string, newRandomMessages []string) {
-	outburstCollectionRef := oh.client.Collection("Outbursts")
 	outburstToAdd := outburst{
-		key:            newKey,
-		callCount:      0,
-		messages:       newMessages,
-		randomMessages: newRandomMessages,
+		Key:            newKey,
+		CallCount:      0,
+		Messages:       newMessages,
+		RandomMessages: newRandomMessages,
 	}
-	_, _, err := outburstCollectionRef.Add(oh.ctx, outburstToAdd)
+
+	_, _, err := oh.client.Collection("Outbursts").Add(oh.ctx, outburstToAdd)
 	if err != nil {
-		log.Printf("An error occurred when adding this outburst: %s", err)
-		return
+		fmt.Printf("Could not add outburst: %s", err)
 	}
 	oh.outbursts = append(oh.outbursts, outburstToAdd)
 }
