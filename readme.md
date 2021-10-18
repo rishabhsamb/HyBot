@@ -9,3 +9,7 @@ Currently, HyBot supports two main functionalities:
 In the future, HyBot is planning to support:
 - Twitter webhooks: A notification service where users can register for notifications when certain public accounts tweet. Other Twitter integrations to come as well.
 - Stock & Crypto: Sourcing daily stock updates for user-subscribed tickers.
+
+## Cloning and Running HyBot Yourself
+
+Coming soon...I really need a free evening.
