@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 
 	"os/signal"
@@ -24,8 +23,8 @@ func main() {
 		panic(err.Error())
 	}
 
-	ctx := context.Background()
-	firestoreClient := createClient(ctx)
+	// ctx := context.Background()
+	// firestoreClient := createClient(ctx)
 
 	token := os.Getenv("TOKEN")
 	b, err := discordgo.New("Bot " + token)
