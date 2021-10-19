@@ -1,0 +1,19 @@
+query getCity($city:String!) {
+  getCityByName(name: $city) {
+    weather {
+      summary {
+        title
+        description
+      }
+      temperature {
+        actual
+        feelsLike
+        min
+        max
+      }
+      wind {
+        speed
+      }
+    }
+  }
+}
