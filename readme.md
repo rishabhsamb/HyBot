@@ -14,4 +14,4 @@ In the future, HyBot is planning to support:
 
 ## Cloning and Running HyBot Yourself
 
-Coming soon...I really need a free evening.
+Coming soon.
