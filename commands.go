@@ -1,76 +1,88 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
+	"cloud.google.com/go/firestore"
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/rishabhsamb/HyBot/commandUtilities"
+	"github.com/rishabhsamb/HyBot/outbursts"
+	"github.com/rishabhsamb/HyBot/weatherCaller"
 )
 
-type command interface {
-	getPrefix() string
-	fire(args []string, s *discordgo.Session, cid string)
+type commandHandler struct {
+	obHandler outbursts.OutburstHandler
 }
 
-type addOutburst struct {
-	prefix string
+func (ch *commandHandler) init(ctx context.Context, client *firestore.Client) {
+	ch.obHandler.Init(client, ctx)
+	ch.obHandler.LoadOutbursts()
 }
 
-func (addOb *addOutburst) getPrefix() string {
-	return addOb.prefix
-}
-
-func (addOb *addOutburst) fire(args []string, s *discordgo.Session, cid string) {
-	if len(args) < 3 {
-		s.ChannelMessageSend(cid, "correct usage is ¿ addob key=\"<key>\" \"<message1>\" \"<message2>\" ... \"<messagen>\"")
-		return
-	}
-
-	var key string
-	if strings.HasPrefix(args[1], "key=\"") && strings.HasSuffix(args[1], "\"") {
-		key = args[1][5 : len(args[1])-1]
-		//s.ChannelMessageSend(cid, key)
-	} else {
-		s.ChannelMessageSend(cid, "key is poorly formatted")
-		return
-	}
-
-	var messageSlice []string
-	for i := 2; i < len(args); i++ {
-		if strings.HasPrefix(args[i], "\"") && strings.HasSuffix(args[i], "\"") {
-			messageSlice = append(messageSlice, args[i][1:len(args[i])-1])
-			fmt.Println(messageSlice)
-		} else {
-			s.ChannelMessageSend(cid, "message "+strconv.FormatInt(int64(i), 10)+" is poorly formatted")
-			return
-		}
-	}
-	ob.addOutburst(&vanillaOutburst{key, 0, messageSlice})
-}
-
-var commands = []command{&addOutburst{"addob"}}
-
-func commandHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (ch *commandHandler) driver(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 
 	if !strings.HasPrefix(m.Content, "?") {
-		ob.OutburstHandler(s, m)
+		fmt.Println("about to execute")
+		ch.obHandler.Execute(s, m.ChannelID, strings.TrimSpace(m.Content))
 		return
 	}
 
-	args := strings.Split(m.Content, " ")[1:]
-	if len(args) == 0 {
-		s.ChannelMessageSend(m.ChannelID, "?")
+	if strings.HasPrefix(m.Content, "?addOutburst ") {
+		toParse := strings.TrimPrefix(m.Content, "?addOutburst ")
+		commandSlice := commandUtilities.CommandSplit(toParse)
+		key := ""
+		foundKey := false
+		var (
+			messages       []string
+			randomMessages []string
+		)
+		for _, val := range commandSlice {
+			fmt.Println(val)
+			if strings.HasPrefix(val, "key=") && !foundKey {
+				keyIntermediate := strings.TrimPrefix(val, "key=\"") // REFACTOR THIS INTO A FUNCTION YOU REPEAT IT LIKE 4 TIMES
+				key = strings.TrimSuffix(keyIntermediate, "\"")
+				foundKey = true
+			} else if strings.HasPrefix(val, "message=") {
+				messageIntermediate := strings.TrimPrefix(val, "message=\"")
+				messageFinal := strings.TrimSuffix(messageIntermediate, "\"")
+				messages = append(messages, messageFinal)
+			} else if strings.HasPrefix(val, "randomMessage=") {
+				randomMessageIntermediate := strings.TrimPrefix(val, "randomMessage=\"")
+				randomMessageFinal := strings.TrimSuffix(randomMessageIntermediate, "\"")
+				randomMessages = append(randomMessages, randomMessageFinal)
+			}
+		}
+		fmt.Println(key)
+		fmt.Println(messages)
+		fmt.Println(randomMessages)
+		ch.obHandler.AddOutburst(key, messages, randomMessages)
 		return
 	}
 
-	for i := 0; i < len(commands); i++ {
-		if args[0] == commands[i].getPrefix() {
-			commands[i].fire(args, s, m.ChannelID)
-			return
+	if strings.HasPrefix(m.Content, "?weather") {
+		toParse := strings.TrimPrefix(m.Content, "?weather ")
+		commandSlice := commandUtilities.CommandSplit(toParse)
+		cityFinal := ""
+		for _, val := range commandSlice {
+			if strings.HasPrefix(val, "city=") {
+				cityIntermediate := strings.TrimPrefix(val, "city=\"")
+				cityFinal = strings.TrimSuffix(cityIntermediate, "\"")
+				break
+			}
+		}
+		cityFinal = strings.TrimSpace(cityFinal)
+		if cityFinal != "" {
+			stringMap := weatherCaller.WeatherCaller(cityFinal)
+			s.ChannelMessageSend(m.ChannelID, "I hope you can read Kelvin b/c I'm not converting this for you.")
+			for k, v := range stringMap {
+				s.ChannelMessageSend(m.ChannelID, k+": "+v)
+			}
 		}
 	}
 }
