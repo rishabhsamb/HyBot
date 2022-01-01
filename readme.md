@@ -15,8 +15,4 @@ In the future, fss-bot is planning to support:
 
 You'll need a .env file specifying a few variables if you want to run HyBot as is. `DISCORD_TOKEN` is just the token you get with every Discord bot. `GOOGLE_PROJECT_ID` is what you think it is, and `GOOGLE_APPLICATION_CREDENTIALS` is the absolute path to a service-account.json that has permissions to run Cloud Firestore.
 
-```
-DISCORD_TOKEN
-GOOGLE_PROJECT_ID
-GOOGLE_APPLICATION_CREDENTIALS
-```
+After that, `go run .` in the root directory will run the bot.
