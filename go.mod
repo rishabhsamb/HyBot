@@ -9,4 +9,5 @@ require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/joho/godotenv v1.4.0
 	google.golang.org/api v0.58.0
+	google.golang.org/protobuf v1.28.1
 )
