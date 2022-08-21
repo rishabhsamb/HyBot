@@ -5,12 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
+	"strings"
 )
 
-const GET_ID_BY_USERNAME_URL_PREFIX = "https://api.twitter.com/2/users/by/username/"
-
-var BEARER_TOKEN = os.Getenv("BEARER_TOKEN")
+const GET_ID_BY_USERNAME_URL = "https://api.twitter.com/2/users/by/username/:username"
 
 type GetIdByUsernameResponse struct {
 	Data struct {
@@ -21,13 +19,13 @@ type GetIdByUsernameResponse struct {
 }
 
 func (th *TwitterHandler) GetIdByUsername(username string) (string, error) {
-	url := GET_ID_BY_USERNAME_URL_PREFIX + username
+	url := strings.Replace(GET_ID_BY_USERNAME_URL, ":username", username, 1)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Println("Error on request construction.\n[ERROR] -", err)
 		return "", err
 	}
-	req.Header.Add("Authorization", "bearer "+BEARER_TOKEN)
+	req.Header.Add("Authorization", "bearer "+th.bearerToken)
 
 	log.Println("GET request to " + url)
 	// todo: set timeout on request
@@ -51,5 +49,5 @@ func (th *TwitterHandler) GetIdByUsername(username string) (string, error) {
 		log.Println("Error on response.\n[ERROR] -", err)
 		return "", err
 	}
-	return responseObject.Data.Username, nil
+	return responseObject.Data.Id, nil
 }
